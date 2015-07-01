@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="author" content="Brian Cooksey" />
+  <meta name="keywords" content="brian cooksey" />
+  <meta name="robots" content="all" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="chrome=IE8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9" />
+  <title>Tools - Brian Cooksey</title>
+  <meta name="description" content="Ramblings of a web developer"></meta>
+
+  <script type="text/javascript">
+    const $ = function(query) { return document.querySelectorAll(query); } // Save some keystrokes
+
+    function onJsonPrettyPrint(event) {
+      const input = $('#json-printer-input')[0];
+      const error = $('#json-printer-error')[0];
+
+      error.classList.add('hide');
+
+      try {
+        const data = JSON.parse(input.value);
+        input.value = JSON.stringify(data, null, 4);
+      }
+      catch(e) {
+        error.classList.remove('hide');
+        error.innerText = e.name + ': ' + e.message;
+      }
+    };
+
+    function onUrlEncode(event, isDecode) {
+      const input = $('#url-encoder-input')[0];
+      const error = $('#url-encoder-error')[0];
+
+      error.classList.add('hide');
+
+      try {
+        var data;
+        if (isDecode) {
+          data = decodeURIComponent(input.value);
+        }
+        else {
+          data = encodeURIComponent(input.value);
+        }
+        input.value = data;
+      }
+      catch(e) {
+        error.classList.remove('hide');
+        error.innerText = e.name + ': ' + e.message;
+      }
+    };
+
+    function onTick(event) {
+      const clock = $('#clock')[0];
+      const now = new Date();
+      clock.innerText = now.getUTCHours() + ':' + now.getUTCMinutes() + ':' + now.getUTCSeconds();
+    };
+
+    window.onload = function() {
+      const jsonPrintSubmit = $('#json-printer-submit')[0];
+      jsonPrintSubmit.addEventListener('click', onJsonPrettyPrint);
+
+      const urlEncodeSubmit = $('#url-encoder-submit')[0];
+      urlEncodeSubmit.addEventListener('click', function(event) { onUrlEncode(event, false); });
+
+      const urlDecodeSubmit = $('#url-decoder-submit')[0];
+      urlDecodeSubmit.addEventListener('click', function(event) { onUrlEncode(event, true); });
+
+      setInterval(onTick, 1000);
+    };
+  </script>
+
+  <style>
+
+    /******** Structural Styling ********/
+    .input-box {
+      width: 530px;
+      height: 500px;
+    }
+
+    .widget {
+      padding: 0px;
+    }
+
+    .widget.one-half {
+      display: inline-block;
+      width: 49%;
+    }
+
+    .error {
+      color: red;
+    }
+
+    .clock-wrapper {
+      margin-top: 50px;
+    }
+
+    /******** Display Styling ********/
+    .hide {
+      display: none;
+    }
+
+    .center {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- JSON Printer -->
+  <div class="widget one-half">
+    <h3>JSON Pretty Print</h3>
+    <textarea id="json-printer-input" class="input-box" placeholder="Enter some JSON here..."></textarea>
+    <br/>
+    <button id="json-printer-submit">Prettify</button>
+    <span id="json-printer-error" class="error hide"></span>
+  </div>
+  
+  <!-- URL Encode/Decode -->
+  <div class="widget one-half">
+    <h3>URL Encoder/Decoder</h3>
+    <textarea id="url-encoder-input" class="input-box" placeholder="Enter a querystring..."></textarea>
+    <br/>
+    <!-- <input type="radio" name="url-encoder-mode" value="encode" checked>Encode</input> -->
+    <!-- <input type="radio" name="url-encoder-mode" value="decode">Decode</input> -->
+    <button id="url-encoder-submit">Encode</button>
+    <button id="url-decoder-submit">Decode</button>
+    <span id="url-encoder-error" class="error hide"></span>
+  </div>
+
+  <!-- Clock -->
+  <div class="widget center clock-wrapper">
+    It is currently <span id="clock"></span> UTC.
+  </div>
+</body>
+</html>
