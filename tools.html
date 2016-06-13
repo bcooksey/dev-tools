@@ -6,7 +6,7 @@
   <meta name="keywords" content="brian cooksey" />
   <meta name="robots" content="all" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta http-equiv="X-UA-Compatible" content="chrome=IE8" />
   <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9" />
   <title>Tools - Brian Cooksey</title>
@@ -19,7 +19,7 @@
 
     function onJsonPrettyPrint(event) {
       const input = $('#json-printer-input')[0];
-      const error = $('#json-printer-error')[0];
+      const error = $('#printer-error')[0];
 
       error.classList.add('hide');
 
@@ -31,6 +31,101 @@
         error.classList.remove('hide');
         error.innerText = e.name + ': ' + e.message;
       }
+    };
+
+    function onXmlPrettyPrint(event) {
+      const input = $('#xml-printer-input')[0];
+      const error = $('#printer-error')[0];
+
+      error.classList.add('hide');
+
+      // First see if the XML is valid
+      const parser = new DOMParser();
+      const serializer = new XMLSerializer();
+      let validatedXml;
+      try {
+        const xmlDoc = parser.parseFromString(input.value, 'text/xml');
+        validatedXml = serializer.serializeToString(xmlDoc);
+      }
+      catch(e) {
+        error.classList.remove('hide');
+        error.innerText = e.name + ': ' + e.message;
+      }
+
+      if (validatedXml.indexOf('parsererror') >= 0) {
+        // TODO: Is this a Chrome-only thing?
+        const parseErrorMatch = validatedXml.match(new RegExp('<div .*?>(.*)'));
+        if (parseErrorMatch && parseErrorMatch.length == 2) {
+          error.classList.remove('hide');
+          error.innerText = parseErrorMatch[1];
+        }
+        return;
+      }
+
+      // Following code taken from https://gist.github.com/sente/1083506#file-javascript_xml_pretty_print-html-L19
+      var formatted = '';
+      var reg = /(>)(<)(\/*)/g;
+      var xml = validatedXml.replace(reg, '$1\r\n$2$3');
+      var pad = 0;
+
+      xml.split('\r\n').forEach(function(node, index) {
+          var indent = 0;
+          if (node.match( /.+<\/\w[^>]*>$/ )) {
+              indent = 0;
+          }
+          else if (node.match( /^<\/\w/ )) {
+              if (pad != 0)
+              {
+                  pad -= 1;
+              }
+          }
+          else if (node.match( /^<\w[^>]*[^\/]>.*$/ )) {
+              indent = 1;
+          }
+          else {
+              indent = 0;
+          }
+          var padding = '';
+          for (var i = 0; i < pad; i++) {
+              padding += '  ';
+          }
+          formatted += padding + node + '\r\n';
+          pad += indent;
+      });
+      input.value = formatted;
+      // END of borrowed code
+    }
+
+    function swapPrinterToJson(event) {
+      const jsonInput = $('#json-printer-input')[0];
+      const xmlInput = $('#xml-printer-input')[0];
+      const error = $('#printer-error')[0];
+      const header = $('.printer-widget h3 span')[0];
+
+      header.innerText = 'JSON';
+      jsonInput.classList.remove('hide');
+      xmlInput.classList.add('hide');
+      error.innerText = '';
+
+      const printSubmit = $('#printer-submit')[0];
+      printSubmit.addEventListener('click', onJsonPrettyPrint);
+      printSubmit.removeEventListener('click', onXmlPrettyPrint);
+    };
+
+    function swapPrinterToXml(event) {
+      const jsonInput = $('#json-printer-input')[0];
+      const xmlInput = $('#xml-printer-input')[0];
+      const error = $('#printer-error')[0];
+      const header = $('.printer-widget h3 span')[0];
+
+      header.innerText = 'XML';
+      jsonInput.classList.add('hide');
+      xmlInput.classList.remove('hide');
+      error.innerText = '';
+
+      const printSubmit = $('#printer-submit')[0];
+      printSubmit.addEventListener('click', onXmlPrettyPrint);
+      printSubmit.removeEventListener('click', onJsonPrettyPrint);
     };
 
     function onUrlEncode(event, isDecode) {
@@ -82,8 +177,8 @@
     };
 
     window.onload = function() {
-      const jsonPrintSubmit = $('#json-printer-submit')[0];
-      jsonPrintSubmit.addEventListener('click', onJsonPrettyPrint);
+      const printSubmit = $('#printer-submit')[0];
+      printSubmit.addEventListener('click', onJsonPrettyPrint);
 
       const urlEncodeSubmit = $('#url-encoder-submit')[0];
       urlEncodeSubmit.addEventListener('click', function(event) { onUrlEncode(event, false); });
@@ -107,6 +202,13 @@
     .big-input-box {
       width: 530px;
       height: 500px;
+    }
+
+    .tab-link {
+      cursor: pointer;
+      color: blue;
+      font-size: small;
+      margin: 0px 5px;
     }
 
     .widget {
@@ -138,15 +240,19 @@
 </head>
 <body>
 
-  <!-- JSON Printer -->
-  <div class="widget one-half">
-    <h3>JSON Pretty Print</h3>
+  <!-- Pretty Printer -->
+  <div class="widget one-half printer-widget">
+    <h3>Pretty Print (<span>JSON</span>)</h3>
+    <div class="tab-nav">
+        <a class="tab-link" onclick="swapPrinterToJson()">JSON</a> <a class="tab-link" onclick="swapPrinterToXml()">XML</a>
+    </div>
     <textarea id="json-printer-input" class="big-input-box" placeholder="Enter some JSON here..."></textarea>
+    <textarea id="xml-printer-input" class="big-input-box hide" placeholder="Enter some XML here..."></textarea>
     <br/>
-    <button id="json-printer-submit">Prettify</button>
-    <span id="json-printer-error" class="error hide"></span>
+    <button id="printer-submit">Prettify</button>
+    <span id="printer-error" class="error hide"></span>
   </div>
-  
+
   <!-- URL Encode/Decode -->
   <div class="widget one-half">
     <h3>URL Encoder/Decoder</h3>
@@ -158,7 +264,6 @@
   </div>
 
   <!-- TODO:
-    * XML Printer
     * Code highlighting for JSON and XML?
   -->
 
