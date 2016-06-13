@@ -12,6 +12,8 @@
   <title>Tools - Brian Cooksey</title>
   <meta name="description" content="Ramblings of a web developer"></meta>
 
+  <script type="text/javascript" src="moment.min.js"></script>
+
   <script type="text/javascript">
     const $ = function(query) { return document.querySelectorAll(query); } // Save some keystrokes
 
@@ -53,10 +55,30 @@
       }
     };
 
+    function onTimestampToDate(event) {
+      const input = $('#from-timestamp-input')[0];
+      const result = $('#from-timestamp-result')[0];
+
+      // 10 digits or a decimal means seconds resolution, otherwise assume milisecond resolution
+      const format = input.value.length == 10 || input.value.indexOf('.') > 0 ? 'X' : 'x';
+      const time = moment(input.value, format);
+
+      result.innerText = time.utc().format();
+    };
+
+    function onDateToTimestamp(event) {
+      const input = $('#to-timestamp-input')[0];
+      const result = $('#to-timestamp-result')[0];
+
+      const time = moment(input.value);
+
+      result.innerText = time.utc().format('X');
+    };
+
     function onTick(event) {
       const clock = $('#clock')[0];
-      const now = new Date();
-      clock.innerText = now.getUTCHours() + ':' + now.getUTCMinutes() + ':' + now.getUTCSeconds();
+      const now = moment.utc();
+      clock.innerText = now.format('HH:mm:ss');
     };
 
     window.onload = function() {
@@ -69,6 +91,12 @@
       const urlDecodeSubmit = $('#url-decoder-submit')[0];
       urlDecodeSubmit.addEventListener('click', function(event) { onUrlEncode(event, true); });
 
+      const timestampToDateSubmit = $('#from-timestamp-submit')[0];
+      timestampToDateSubmit.addEventListener('click', onTimestampToDate);
+
+      const dateToTimestampSubmit = $('#to-timestamp-submit')[0];
+      dateToTimestampSubmit.addEventListener('click', onDateToTimestamp);
+
       setInterval(onTick, 1000);
     };
   </script>
@@ -76,13 +104,13 @@
   <style>
 
     /******** Structural Styling ********/
-    .input-box {
+    .big-input-box {
       width: 530px;
       height: 500px;
     }
 
     .widget {
-      padding: 0px;
+      padding: 0px 0px 20px 0px;
     }
 
     .widget.one-half {
@@ -113,7 +141,7 @@
   <!-- JSON Printer -->
   <div class="widget one-half">
     <h3>JSON Pretty Print</h3>
-    <textarea id="json-printer-input" class="input-box" placeholder="Enter some JSON here..."></textarea>
+    <textarea id="json-printer-input" class="big-input-box" placeholder="Enter some JSON here..."></textarea>
     <br/>
     <button id="json-printer-submit">Prettify</button>
     <span id="json-printer-error" class="error hide"></span>
@@ -122,13 +150,28 @@
   <!-- URL Encode/Decode -->
   <div class="widget one-half">
     <h3>URL Encoder/Decoder</h3>
-    <textarea id="url-encoder-input" class="input-box" placeholder="Enter a querystring..."></textarea>
+    <textarea id="url-encoder-input" class="big-input-box" placeholder="Enter a querystring..."></textarea>
     <br/>
-    <!-- <input type="radio" name="url-encoder-mode" value="encode" checked>Encode</input> -->
-    <!-- <input type="radio" name="url-encoder-mode" value="decode">Decode</input> -->
     <button id="url-encoder-submit">Encode</button>
     <button id="url-decoder-submit">Decode</button>
     <span id="url-encoder-error" class="error hide"></span>
+  </div>
+
+  <!-- TODO:
+    * XML Printer
+    * Code highlighting for JSON and XML?
+  -->
+
+  <!-- Timestmap converter -->
+  <div class="widget one-half">
+    <h3>Timestamp Converter</h3>
+    Timestamp: <input id="from-timestamp-input" placeholder="Enter a timestamp"></input>
+    <button id="from-timestamp-submit">Convert</button>
+    <span id="from-timestamp-result"></span>
+    <br/>
+    Date: <input id="to-timestamp-input" placeholder="Enter an ISO-8601"></input>
+    <button id="to-timestamp-submit">Convert</button>
+    <span id="to-timestamp-result"></span>
   </div>
 
   <!-- Clock -->
