@@ -19,16 +19,29 @@ class MyHandler(BaseHTTPRequestHandler):
     def pretty_json_dump(self, data):
         return json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
 
+    def serve_file(self, file_name, as_stream=False):
+        with open(os.path.join(CWD, file_name), 'rb') as requested_file:
+            content = requested_file.read()
+
+        if as_stream:
+            self.send_response(200)
+            self.send_header('Content-type', 'application/octet-stream')
+            self.end_headers()
+            self.wfile.write(content)
+        else:
+            mimetype = mimetypes.guess_type(file_name)
+            self.send_response(200)
+            self.send_header('Content-type', mimetype[0])
+            self.send_header('Content-Length', len(content))
+            self.end_headers()
+            self.wfile.write(content)
+
     def do_GET(self):
         try:
             url_parts = urlparse.urlparse(self.path)
 
             if url_parts.path == '/':
-                with open(os.curdir + os.sep + 'index.html') as requested_file:
-                    self.send_response(200)
-                    self.send_header('Content-type', 'text/html')
-                    self.end_headers()
-                    self.wfile.write(requested_file.read())
+                self.serve_file('index.html')
             elif url_parts.path == '/list':
                 # Read data folder for files, optionally filtering to the requested type
                 files = os.listdir(CWD + '/data')
@@ -56,31 +69,10 @@ class MyHandler(BaseHTTPRequestHandler):
                 self.send_header('Content-Length', 0)
                 self.send_header('Location', '/list')
                 self.end_headers()
-            elif url_parts.path.endswith(".html"):
-                # Serve up the requested HTML page
-                with open(os.curdir + os.sep + url_parts.path) as requested_file:
-                    self.send_response(200)
-                    self.send_header('Content-type', 'text/html')
-                    self.end_headers()
-                    self.wfile.write(requested_file.read())
             else:
-                # Asked for a specific data file
-                with open(os.path.join(CWD, url_parts.path[1:]), 'rb') as requested_file:
-                    content = requested_file.read()
-
                 query = urlparse.parse_qs(url_parts.query)
-                if query.get('octet'):
-                    self.send_response(200)
-                    self.send_header('Content-type', 'application/octet-stream')
-                    self.end_headers()
-                    self.wfile.write(content)
-                else:
-                    mimetype = mimetypes.guess_type(url_parts.path[1:])
-                    self.send_response(200)
-                    self.send_header('Content-type', mimetype[0])
-                    self.send_header('Content-Length', len(content))
-                    self.end_headers()
-                    self.wfile.write(content)
+                as_stream = query.get('octet', ['false'])[0] != 'false'
+                self.serve_file(url_parts.path[1:], as_stream=as_stream)
 
         except IOError as e:
             print e
