@@ -15,17 +15,17 @@ Included tools are:
 
 1. Snag the repo
 
-`git clone <repo>`
+  `git clone <repo>`
 
-2. Setup the two required directories
+1. Setup the two required directories
 
-`mkdir data; mkdir uploads`
+  `mkdir data; mkdir uploads`
 
-3. Copy any files you want to be able to serve up into the `data` directory.
+1. Copy any files you want to be able to serve up into the `data` directory.
 
-4. Run the server (can optionally specify the `PORT` environment variable)
+1. Run the server (can optionally specify the `PORT` environment variable)
 
-`python server.py`
+  `python server.py`
 
 Visit `http://localhost:8084/` and enjoy!
 
