@@ -11,7 +11,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 
 CWD = os.path.abspath('.')
-PORT = os.environ.get('PORT', 8084)
+PORT = int(os.environ.get('PORT', 8084))
 
 
 class MyHandler(BaseHTTPRequestHandler):
